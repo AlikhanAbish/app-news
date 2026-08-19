@@ -15,7 +15,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'password', 'password_cofirm', 'first_name', 'last_name')
+        fields = ('id', 'username', 'email', 'password', 'password_confirm', 'first_name', 'last_name')
 
     def validate(self, attrs):
         if attrs['password'] != attrs['password_confirm']:
@@ -66,14 +66,23 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'avatar', 'bio', 'created_at', 'updated_at')
+        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'avatar', 'bio', 'created_at', 'updated_at', 'posts_count', 'comments_count')
         read_only_fields = ('id', 'created_at', 'updated_at')
     
     def get_posts_count(self, obj):
-        return obj.posts.count()
+        try:
+            return obj.posts.count()
+        except AttributeError:
+            # Если атрибут posts не существует, возвращаем 0
+            return 0
+
 
     def get_comments_count(self, obj):
-        return obj.comments.count()
+        try:
+            return obj.comments.count()
+        except AttributeError:
+            # Если атрибут comments не существует, возвращаем 0
+            return 0
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):
@@ -111,37 +120,3 @@ class ChangePasswordSerializer(serializers.Serializer):
         user.set_password(self.validated_data['new_password'])
         user.save()
         return user
-
-
-class ChangePasswordView(generics.UpdateAPIView):
-    serializer_class = ChangePasswordSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_object(self):
-        return self.request.user
-    
-    def update(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-
-        return Response({
-            'message': 'Password updated successfully.'
-        }, status=status.HTTP_200_OK)
-
-
-@api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
-def logout_view(request):
-    try:
-        refresh_token = request.data.get('refresh')
-        token = RefreshToken(refresh_token)
-        token.blacklist()
-
-        return Response({
-            'message': 'User logged out successfully.'
-        }, status=status.HTTP_200_OK)
-    except Exception as e:
-        return Response({
-            'error': 'Invalid token or token has already been blacklisted.'
-        }, status=status.HTTP_400_BAD_REQUEST)
