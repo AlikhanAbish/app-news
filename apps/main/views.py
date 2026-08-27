@@ -64,7 +64,7 @@ class PostListCreateView(generics.ListCreateAPIView):
             )
         return queryset
 
-    def get serializer_class(self):
+    def get_serializer_class(self):
         if self.request.method == 'POST':
             return PostCreateUpdateSerializer
         return PostListSerializer
@@ -78,13 +78,13 @@ class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthorOrReadOnly]
     lookup_field = 'slug'
 
-    def get serializer_class(self):
+    def get_serializer_class(self):
         if self.request.method in ['PUT', 'PATCH']:
             return PostCreateUpdateSerializer
         return PostDetailSerializer
 
     def retrieve(self, request, *args, **kwargs):
-        instance = self.gte_object()
+        instance = self.get_object()
 
         if request.method == 'GET':
             instance.increment_views()
@@ -115,7 +115,7 @@ class MyPostsView(generics.ListAPIView):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.AloowAny])
+@permission_classes([permissions.AllowAny])
 def post_by_category(request, category_slug):
     category = get_object_or_404(Category, slug=category_slug)
 
@@ -126,9 +126,10 @@ def post_by_category(request, category_slug):
 
     serializer = PostListSerializer(posts, many=True, context={'request': request})
 
-    return Response(
+    return Response({
         'category': CategorySerializer(category).data,
-        'posts': serializer.data)
+        'posts': serializer.data
+    })
 
 
 @api_view(['GET'])

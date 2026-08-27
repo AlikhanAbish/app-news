@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from django.utils.text import slugify
+from slugify import slugify
 from .models import Category, Post
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -14,7 +14,7 @@ class CategorySerializer(serializers.ModelSerializer):
         return obj.posts.filter(status='published').count()
 
     def create(self, validated_data):
-        validated_data['slug'] = slugify(validated_data['name'])
+        validated_data['slug'] = slugify(validated_data['name'], allow_unicode=True)
         return super().create(validated_data)
 
 
@@ -55,10 +55,10 @@ class PostDetailSerializer(serializers.ModelSerializer):
     def get_author_info(self, obj):
         """Возвращает информацию об авторе поста"""
         return {
-            'id': author.id,
-            'username': author.username,
-            'full_name': author.full_name,
-            'avatar': author.avatar.url if author.avatar else None,
+            'id': obj.author.id,
+            'username': obj.author.username,
+            'full_name': obj.author.full_name,
+            'avatar': obj.author.avatar.url if obj.author.avatar else None,
         }
 
     def get_category_info(self, obj):
@@ -82,12 +82,12 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data['author'] = self.context['request'].user
-        validated_data['slug'] = slugify(validated_data['title'])
+        validated_data['slug'] = slugify(validated_data['title'], allow_unicode=True)
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
         if 'title' in validated_data:
-            validated_data['slug'] = slugify(validated_data['title'])
+            validated_data['slug'] = slugify(validated_data['title'], allow_unicode=True)
         return super().update(instance, validated_data)
 
 

@@ -5,7 +5,7 @@ urlpatterns = [
     # Categories
     path('categories/', views.CategoryListCreateView.as_view(), name='category-list'),
     path('categories/<slug:slug>/', views.CategoryDetailView.as_view(), name='category-detail'),
-    path('categories/<slug:slug>/posts/', views.posts_by_category, name='posts-by-category'),
+    path('categories/<slug:slug>/posts/', views.post_by_category, name='post-by-category'),
 
     # Posts
     path('', views.PostListCreateView.as_view(), name='post-list'),
